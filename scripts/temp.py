@@ -15,6 +15,8 @@ from sklearn import manifold, datasets
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.datasets.samples_generator import make_blobs
 #%matplotlib inline
+abs
+
 
 X1, y1 = make_blobs(n_samples=50, centers=[[2,2], [-2,-1], [3,1], [10,4]], cluster_std=0.8)
 
