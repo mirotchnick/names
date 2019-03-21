@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
 
 import numpy as np
 import pandas as pd
@@ -94,3 +89,18 @@ def llf(id):
     return '[%s %s %s]' % (pdf['manufact'][id], pdf['model'][id], int(float(pdf['type'][id])) )
 
 dendro = hierarchy.dendrogram(Z, leaf_label_func=llf, leaf_rotation=0, leaf_font_size=12, orientation='right')
+
+dist_mat = distance_matrix(featmat, featmat)
+print(dist_mat)
+
+agglom = AgglomerativeClustering(n_clusters=6, linkage='complete')
+agglom.fit(featmat)
+agglom.labels_
+
+pdf['cluster'] = agglom.labels_
+pdf.head()
+
+import matplotlib.cm as cm
+n_clusters = max(agglom.labels_) + 1
+colors = cm.rainbow(np.linspace(0, 1, n_clusters))
+cluster_labels = list(range(0, n_clusters))
