@@ -1,3 +1,6 @@
+#content-based filtering
+
+
 !wget -O moviedataset.zip https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/ML0101ENv3/labs/moviedataset.zip
 print('unzipping...')
 !unzip -o -j moviedataset.zip
@@ -51,3 +54,32 @@ inputMovies = pd.DataFrame(userInput)
 inputMovies
 
 inputID = movies_df[movies_df['title'].isin(inputMovies['title'].tolist())]
+inputMovies = pd.merge(inputID, inputMovies)
+inputMovies = inputMovies.drop('genres', 1).drop('year', 1)
+
+userMovies = moviegenres_df[moviegenres_df['movieId'].isin(inputMovies['movieId'].tolist())]
+
+userMovies = userMovies.reset_index(drop=True)
+usergenres = userMovies.drop('movieId', 1).drop('title', 1).drop('genres', 1).drop('year', 1)
+
+userProfile = usergenres.transpose().dot(inputMovies['rating'])
+
+genretable = moviegenres_df.set_index(moviegenres_df['movieId'])
+genretable = genretable.drop('movieId', 1).drop('title', 1).drop('genres', 1).drop('year', 1)
+
+genretable.shape
+
+recommendationTable_df = ((genretable*userProfile).sum(axis=1))/(userProfile.sum())
+recommendationTable_df.head()
+
+movies_df.loc[movies_df['movieId'].isin(recommendationTable_df.head(20).keys())]
+
+
+
+#collaborative filtering
+
+movies_df.head()
+movies_df = movies_df.drop('genres', 1)
+
+ratings_df.head()
+
