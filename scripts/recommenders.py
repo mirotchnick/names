@@ -83,3 +83,62 @@ movies_df = movies_df.drop('genres', 1)
 
 ratings_df.head()
 
+inputMovies
+
+userSubset = ratings_df[ratings_df['movieId'].isin(inputMovies['movieId'].tolist())]
+
+userSubGroup = userSubset.groupby(['userId'])
+
+userSubGroup.get_group(1130)
+
+userSubGroup = sorted(userSubGroup, key=lambda x: len(x[1]), reverse=True)
+
+userSubGroup[0:3]
+
+userSubGroup = userSubGroup[1:100]
+
+pearsonDict = {}
+
+for name, group in userSubGroup:
+    group = group.sort_values(by='movieId')
+    inputMovies = inputMovies.sort_values(by='movieId')
+    nRatings = len(group)
+    temp_df = inputMovies[inputMovies['movieId'].isin(group['movieId'].tolist())]
+    tempRatings = temp_df['rating'].tolist()
+    tempGroupList = group['rating'].tolist()
+    Sxx = sum([i**2 for i in tempRatings]) - pow(sum(tempRatings), 2)/float(nRatings)
+    Syy = sum([i**2 for i in tempGroupList]) - pow(sum(tempGroupList), 2)/float(nRatings)
+    Sxy = sum(i*j for i,j in zip(tempRatings, tempGroupList)) - sum(tempRatings)*sum(tempGroupList)/float(nRatings)
+    if Sxx != 0 and Syy != 0:
+        pearsonDict[name] = Sxy/sqrt(Sxx*Syy)
+    else:
+        pearsonDict[name] = 0
+
+pearsonDict.items()
+
+pearsonDF = pd.DataFrame.from_dict(pearsonDict, orient='index')
+pearsonDF.columns = ['similarityIndex']
+pearsonDF['UserId'] = pearsonDF.index
+pearsonDF.index = range(len(pearsonDF))
+
+topUsers = pearsonDF.sort_values(by='similarityIndex', ascending=False)[0:50]
+
+topUsersRating = topUsers.merge(ratings_df, left_on='UserId', right_on='userId', how='inner')
+topUsersRating.head()
+
+topUsersRating['weightedRating'] = topUsersRating['similarityIndex']*topUsersRating['rating']
+topUsersRating.head()
+
+tempTopUsersRating = topUsersRating.groupby('movieId').sum()[['similarityIndex', 'weightedRating']]
+tempTopUsersRating.columns = ['sum_similarityIndex', 'sum_weightedRating']
+tempTopUsersRating.head()
+
+recommendation_df = pd.DataFrame()
+recommendation_df['weighted average recommendation score'] = tempTopUsersRating['sum_weightedRating']/tempTopUsersRating['sum_similarityIndex']
+recommendation_df['movieId'] = tempTopUsersRating.index
+recommendation_df.head()
+
+recommendation_df = recommendation_df.sort_values(by='weighted average recommendation score', ascending=False)
+recommendation_df.head()
+
+movies_df.loc[movies_df['movieId'].isin(recommendation_df.head(10)['movieId'].tolist())]
